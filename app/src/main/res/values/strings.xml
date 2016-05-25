@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">FaceIdentify</string>
+
+    <string name="btn_takePhoto">进行拍照</string>
+    <string name="btn_choosePhoto">选择照片</string>
+    <string name="btn_identify">进行识别</string>
+</resources>
