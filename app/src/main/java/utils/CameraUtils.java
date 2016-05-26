@@ -1,9 +1,11 @@
-package com.example.lpc.faceidentify;
+package utils;
 
 
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.example.lpc.faceidentify.Contants;
 
 import java.io.IOException;
 import java.util.Collections;
