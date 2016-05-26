@@ -1,6 +1,7 @@
 package com.example.lpc.faceidentify;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int mAgeAge;    //识别到年龄
     private String mSexSex;   //识别到的性别
     private Bitmap mPhoto;
+    private String mImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +130,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
+    /**
+     * 压缩图片
+     * */
+    public void compressImage(){
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mImagePath,options);
+        double radio = Math.max(options.outWidth * 1.0d / 1024f,options.outHeight * 1.0d / 1024f);
+        options.inSampleSize = (int) Math.ceil(radio);
+        options.inJustDecodeBounds = false;
+        mPhoto = BitmapFactory.decodeFile(mImagePath,options);
+    }
 
     private long  mLongExitTime = 0;
     @Override
