@@ -1,9 +1,15 @@
 package com.example.lpc.faceidentify;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -13,6 +19,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.facepp.error.FaceppParseException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,6 +43,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Bitmap mPhoto;
     private String mImagePath;
 
+    private static final int SUCCESS_MESSAGE = 0x11;
+    private static final int FAIL_MESSAGE = 0x12;
+    private static int PIC_CODE = 1;
+    private static int ERROR_CODE = 000;
+    private static int TAKEPIC_CODE = 2;
+    private boolean isFlag = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnIdentify = (Button)findViewById(R.id.identify);
         mBtnTakePhoto = (Button)findViewById(R.id.takePhoto);
         mTextInfoShow = (TextView)findViewById(R.id.infoShow);
+        mFrameWaitting= (FrameLayout)findViewById(R.id.waitting);
+        mFrameWaitting.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -60,15 +77,80 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnIdentify.setOnClickListener(this);
     }
 
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case SUCCESS_MESSAGE:
+                    mFrameWaitting.setVisibility(View.GONE);
+                    JSONObject object = (JSONObject) msg.obj;
+                    jsonReBitmap(object);
+                    mImage.setImageBitmap(mPhoto);
+                    break;
+                case FAIL_MESSAGE:
+                    mFrameWaitting.setVisibility(View.GONE);
+                    ToastUtils.showShortToast("请检查网络是否正常连接");
+
+                    break;
+            }
+        }
+    };
+
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.identify:    //识别脸部信息
+                mFrameWaitting.setVisibility(View.VISIBLE);   //进行识别时将进度条可见
+                if(mImagePath != null && !mImagePath.equals("")){
+                    compressImage();
+                }else if (isFlag){
+                    FaceDetect.detect(mPhoto, new FaceDetect.IDetectResult() {
+                        @Override
+                        public void success(JSONObject object) {
+                            Message message = Message.obtain();
+                            message.what = SUCCESS_MESSAGE;
+                            message.obj = object;    //识别到的脸部json信息
+                            handler.sendMessage(message);
+                        }
+
+                        @Override
+                        public void failed(FaceppParseException exception) {
+                            Message message = Message.obtain();
+                            message.what = FAIL_MESSAGE;
+                            handler.sendMessage(message);
+                        }
+                    });
+                }else{
+                    mPhoto = BitmapFactory.decodeResource(getResources(),R.drawable.image);
+                }
+
+                FaceDetect.detect(mPhoto, new FaceDetect.IDetectResult() {
+                    @Override
+                    public void success(JSONObject object) {
+                        Message message = Message.obtain();
+                        message.what = SUCCESS_MESSAGE;
+                        message.obj = object;
+                        handler.sendMessage(message);
+                    }
+
+                    @Override
+                    public void failed(FaceppParseException exception) {
+                        Message message = Message.obtain();
+                        message.what = FAIL_MESSAGE;
+                        handler.sendMessage(message);
+                    }
+                });
 
                 break;
             case R.id.choosePhoto:   //从图库中选择照片
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent,PIC_CODE);   //从图库中选择照片并将结果返回
                 break;
             case R.id.takePhoto:    //使用摄像头拍摄照片
+                isFlag = true;
+                Intent getImageByCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(getImageByCamera,TAKEPIC_CODE);
                 break;
             default:
                 break;
@@ -76,6 +158,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PIC_CODE){
+            if (data != null){
+                Uri uri = data.getData();
+                Cursor cursor = getContentResolver().query(uri,null,null,null,null);
+                cursor.moveToNext();
+                int index = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+                mImagePath = cursor.getString(index);
+                cursor.close();
+                compressImage();
+                mImage.setImageBitmap(mPhoto);
+            }
+        }else if (requestCode == TAKEPIC_CODE){
+            if (data != null){
+                Uri uri = data.getData();
+                if (uri == null){
+                    Bundle bundle = data.getExtras();
+                    if (bundle != null){
+                        mPhoto = (Bitmap) bundle.get("data");  //得到拍摄到的数据，将其转化为bitmap
+                    }else {
+                        ToastUtils.showShortToast("error");
+                    }
+                }
+                mImage.setImageBitmap(mPhoto);
+            }
+        }
+    }
 
     /**
      * 将包含识别到的信息进行转化
@@ -149,6 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (System.currentTimeMillis() - mLongExitTime > 2000){
             mLongExitTime = System.currentTimeMillis();
             ToastUtils.showShortToast("再按一次退出");
+
         }else
         {
             MyApplication.getInstance().exitApp();
