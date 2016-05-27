@@ -256,13 +256,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private long  mLongExitTime = 0;
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (System.currentTimeMillis() - mLongExitTime > 2000){
-            mLongExitTime = System.currentTimeMillis();
-            ToastUtils.showShortToast("再按一次退出");
+        if (keyCode == KeyEvent.KEYCODE_BACK){
+            if (System.currentTimeMillis() - mLongExitTime > 2000){
+                mLongExitTime = System.currentTimeMillis();
+                ToastUtils.showShortToast("再按一次退出");
 
-        }else
-        {
-            MyApplication.getInstance().exitApp();
+            }else
+            {
+                MyApplication.getInstance().exitApp();
+            }
+            return true;
         }
         return super.onKeyDown(keyCode,event);
     }
