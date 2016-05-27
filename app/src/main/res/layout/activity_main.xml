@@ -8,13 +8,24 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.lpc.faceidentify.MainActivity">
+
+    <TextView
+        android:id="@+id/demoShow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FaceIdentifyDemo"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textColor="@android:color/widget_edittext_dark"/>
     
     <ImageView
         android:id="@+id/photos"
         android:layout_width="match_parent"
         android:layout_height="400dp"
         android:scaleType="fitXY"
-        android:src="@drawable/image"/>
+        android:src="@drawable/image"
+        android:layout_below="@+id/demoShow"
+        android:paddingTop="5dp"/>
 
     <TextView
         android:id="@+id/infoShow"
@@ -41,7 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/btn_choosePhoto"/>
+            android:text="@string/btn_takePhoto"/>
         <Button
             android:id="@+id/choosePhoto"
             android:layout_width="match_parent"
@@ -58,7 +69,7 @@
 
     <FrameLayout
         android:id="@+id/waitting"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="visible"
         android:layout_centerInParent="true">
