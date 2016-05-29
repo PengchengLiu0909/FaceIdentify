@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static int ERROR_CODE = 000;
     private static int TAKEPIC_CODE = 2;
     private boolean isFlag = false;
-    private long longIdentifyTime = 0;
+    //private long longIdentifyTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
